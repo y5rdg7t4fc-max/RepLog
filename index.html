@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="hr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>RepLog</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1d4ed8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="RepLog"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: practical gym logbook, calm and fast to use
+   IDEA: a nutrition label crossed with a training log card
+   PICTURE: big calorie ring with macro bars; sets as log lines
+   COLOUR and TYPE: chalk white / graphite, blue accent, macro colours; Barlow Condensed figures
+   LAYOUT: one column app, sticky date header, bottom tab bar */
+:root{color-scheme:light dark;--bg:light-dark(#f2f3f0,#111316);--card:light-dark(#fff,#1b1e23);--ink:light-dark(#15171b,#eef0f2);--mut:light-dark(#646a72,#9aa1aa);--line:light-dark(#e1e3df,#2c3037);--soft:light-dark(#ebede8,#24282e);--acc:light-dark(#1d4ed8,#5b8cff);--red:light-dark(#c62828,#ef5350);--pro:light-dark(#d32f2f,#ef5350);--carb:#e39a12;--fat:light-dark(#2e9e4f,#4cc26e)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;overflow-x:clip}
+button,input,select{font:inherit;color:inherit}
+.n{font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;font-variant-numeric:tabular-nums}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 10px) 16px 8px;border-bottom:1px solid var(--line)}
+.hrow{max-width:640px;margin:auto;display:flex;align-items:center;gap:8px}
+.hrow h1{font:700 22px/1 "Barlow Condensed",sans-serif;margin:0;flex:1}
+#sync{font-size:13px;color:var(--mut)}.logo{width:32px;height:32px;flex:none}
+.hrow h1{letter-spacing:.01em}textarea.in{height:110px;padding:10px 12px;font:13px/1.4 ui-monospace,monospace;resize:vertical}
+.dnav{max-width:640px;margin:8px auto 0;display:flex;align-items:center;gap:6px}
+.dnav button{width:44px;height:44px;border:0;border-radius:12px;background:var(--soft);font-size:20px;cursor:pointer}
+.dnav #dlab{flex:1;height:44px;border:0;background:none;font:700 22px "Barlow Condensed",sans-serif;cursor:pointer}
+main{max-width:640px;margin:auto;padding:14px 16px calc(100px + env(safe-area-inset-bottom))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.sum{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:center}
+.ring{position:relative;width:150px;height:150px}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .mid{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .mid b{font-size:38px;line-height:1}.ring .mid span{font-size:13px;color:var(--mut)}
+.mac{margin-bottom:10px}.mac .t{display:flex;justify-content:space-between;font-size:14px}.mac .t span:last-child{white-space:nowrap;color:var(--mut)}
+.bar{height:10px;border-radius:6px;background:var(--soft);overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
+.kc{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);margin-top:6px}
+.link{border:0;background:none;color:var(--acc);font-weight:600;padding:8px 0;cursor:pointer;min-height:44px}
+.big{width:100%;min-height:52px;border:0;border-radius:14px;background:var(--acc);color:#fff;font-weight:600;font-size:17px;cursor:pointer;margin-bottom:14px}
+.ghost{min-height:44px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 14px;cursor:pointer;font-weight:500}
+h3{display:flex;justify-content:space-between;margin:18px 4px 6px;font:700 19px "Barlow Condensed",sans-serif}h3 span{color:var(--mut);font-weight:600}
+.item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:var(--card);border-bottom:1px solid var(--line);padding:12px 14px;min-height:56px;cursor:pointer}
+.list{border:1px solid var(--line);border-radius:16px;overflow:hidden}.list .item:last-child{border-bottom:0}
+.item .nm{flex:1}.item .nm small{display:block;color:var(--mut);font-size:13px}.item .kv{white-space:nowrap;font-size:20px}
+.tag{font-size:11px;font-weight:600;background:var(--soft);border-radius:6px;padding:1px 6px;margin-left:6px;color:var(--mut)}
+.empty{color:var(--mut);text-align:center;padding:26px 12px}
+.dots{display:inline-flex;gap:8px;font-size:13px;color:var(--mut)}.dots b{font-weight:600}
+.p{color:var(--pro)}.c{color:var(--carb)}.f{color:var(--fat)}
+input.in,select.in{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:0 12px;font-size:16px}
+input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+label.l{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{min-height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);cursor:pointer}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav div{max-width:640px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{border:0;background:none;min-height:60px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;display:grid;place-items:center;gap:2px}
+nav button svg{width:24px;height:24px}nav button.on{color:var(--acc)}
+#veil{position:fixed;inset:0;background:#0007;z-index:9;display:none}#veil.on{display:block}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:10;max-width:640px;margin:auto;max-height:90vh;overflow:auto;background:var(--card);border-radius:22px 22px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .22s ease}
+#sheet.on{transform:none}
+#sheet h2{margin:0 0 8px;font:700 26px "Barlow Condensed",sans-serif;display:flex;justify-content:space-between;align-items:center}
+.x{width:44px;height:44px;border:0;border-radius:12px;background:var(--soft);font-size:22px;cursor:pointer}
+.x.arm{width:auto;padding:0 12px;background:var(--red);color:#fff;font-size:15px;font-weight:600;white-space:nowrap}
+.mpi{display:block}.mpt{display:flex;align-items:center;gap:8px}.mpv{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;margin-top:4px;font-size:14px}.mpv .n{font-size:17px}
+.mb{display:flex;height:8px;border-radius:5px;overflow:hidden;background:var(--soft);margin-top:6px;max-width:260px}.mb i{display:block;height:100%}
+.don{border-radius:50%;display:grid;place-items:center;flex:none}.don>div{width:66%;height:66%;border-radius:50%;background:var(--card);display:grid;place-content:center;text-align:center;line-height:1.05}
+.don b{font-size:22px}.don span{font-size:11px;color:var(--mut)}.item .don b{font-size:15px}.item .don span{font-size:9px}
+.tot{display:flex;gap:16px;align-items:center;background:var(--soft);border-radius:16px;padding:14px;margin:12px 0}
+.leg{flex:1;display:grid;gap:6px}.leg div{display:grid;grid-template-columns:12px minmax(0,1fr) auto auto;gap:8px;align-items:center;font-size:15px}
+.leg i{width:12px;height:12px;border-radius:4px}.leg b{font:700 18px "Barlow Condensed",sans-serif;text-align:right;white-space:nowrap}.leg em{font-style:normal;color:var(--mut);font-size:13px;width:38px;text-align:right}
+.share{font-size:12px;color:var(--mut);margin-left:auto;white-space:nowrap}
+.res{max-height:46vh;overflow:auto;margin-top:8px;border:1px solid var(--line);border-radius:14px}
+.prev{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;background:var(--soft);border-radius:12px;padding:10px 12px;margin:12px 0}
+.prev .n{font-size:26px}
+.row2{display:flex;gap:8px;margin-top:14px}.row2>*{flex:1}
+.danger{min-height:48px;border:1px solid var(--red);color:var(--red);background:none;border-radius:12px;cursor:pointer;font-weight:600}
+.danger.arm{background:var(--red);color:#fff}
+.save{min-height:48px;border:0;background:var(--acc);color:#fff;border-radius:12px;font-weight:600;cursor:pointer}
+.ex .exh{display:flex;align-items:center;gap:8px}.ex .exh b{flex:1;font:700 22px "Barlow Condensed",sans-serif}
+.last{font-size:13px;color:var(--mut);margin:2px 0 10px}
+.sh,.set{display:grid;grid-template-columns:22px minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) 20px 36px;gap:6px;align-items:center}
+.set .pv{font:600 17px "Barlow Condensed",sans-serif;color:var(--mut);text-align:center;white-space:nowrap;background:var(--soft);border-radius:10px;height:44px;display:grid;place-items:center}
+.set .ar{font-weight:700;text-align:center;font-size:18px}.ar.up{color:#1f9d55}.ar.dn{color:var(--red)}.ar.eq{color:var(--mut)}
+.tpl{font-size:14px;color:var(--mut);margin:0 4px 12px}
+.sh{font-size:12px;color:var(--mut);padding:0 0 4px}.set{margin-bottom:6px}
+.set .no{font:700 18px "Barlow Condensed";color:var(--mut);text-align:center}
+.set input{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);text-align:center;font:700 20px "Barlow Condensed",sans-serif}
+.set .rm{width:36px;height:40px;border:0;background:none;color:var(--mut);font-size:20px;cursor:pointer}
+.exf{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}.exf .vol{margin-left:auto;font-size:14px;color:var(--mut);white-space:nowrap}
+.addx{display:flex;gap:8px;margin-bottom:12px}.addx input{flex:1}
+.stat{display:flex;gap:10px;margin-bottom:12px}.stat div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:28px;line-height:1.1}.stat span{font-size:13px;color:var(--mut)}
+#note{font-size:13px;color:var(--mut);background:var(--soft);border-radius:10px;padding:8px 12px;margin-bottom:12px;display:none}
+.tm{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--acc);background:none;color:var(--acc);font:700 22px "Barlow Condensed",sans-serif;cursor:pointer;font-variant-numeric:tabular-nums}
+.tm svg{width:18px;height:18px}.tm.run{background:var(--acc);color:#fff}
+.last .link{min-height:0;padding:0 2px;font-size:13px}
+#tbar{position:fixed;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom));z-index:7;display:none;justify-content:center;padding:0 12px 8px}
+#tbar div{max-width:616px;width:100%;display:flex;align-items:center;gap:12px;background:var(--acc);color:#fff;border-radius:16px;padding:8px 8px 8px 16px;box-shadow:0 6px 20px #0004}
+#tbar span{flex:1;font-weight:600}#tbar b{font:700 30px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+#tbar button{min-height:44px;border:0;border-radius:12px;background:#fff3;color:#fff;padding:0 14px;font-weight:600;cursor:pointer}
+.big-ar{font:700 30px "Barlow Condensed",sans-serif;width:34px;text-align:center}.big-ar.up{color:#1f9d55}.big-ar.dn{color:var(--red)}.big-ar.eq{color:var(--mut)}
+.rx{margin:14px 0 4px;font:700 20px "Barlow Condensed",sans-serif}
+.rs{display:grid;grid-template-columns:28px minmax(0,1fr) 24px minmax(0,1fr);gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:15px}
+.rs .n{font-size:19px}.rs .pv2{color:var(--mut);font-size:13px;text-align:right}
+@media(max-width:420px){.sum{grid-template-columns:120px minmax(0,1fr);gap:12px}.ring{width:120px;height:120px}.ring .mid b{font-size:30px}.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#sheet{transition:none}}
+</style></head><body>
+<header><div class="hrow"><svg class="logo" viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="20" fill="#1d4ed8"/><rect x="24" y="39" width="36" height="6" rx="3" fill="#fff"/><rect x="16" y="28" width="9" height="28" rx="3" fill="#fff"/><rect x="59" y="28" width="9" height="28" rx="3" fill="#fff"/><rect x="10" y="34" width="6" height="16" rx="2" fill="#fff"/><rect x="68" y="34" width="6" height="16" rx="2" fill="#fff"/><rect x="22" y="62" width="40" height="4" rx="2" fill="#e39a12"/></svg><h1>RepLog</h1><span id="sync"></span><button class="x" data-act="data" aria-label="Podaci i sigurnosna kopija"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></button></div>
+<div class="dnav"><button data-act="prev" aria-label="Prethodni dan">‹</button><button id="dlab" data-act="today">Danas</button><button data-act="next" aria-label="Sljedeći dan">›</button></div></header>
+<main><div id="note"></div><div id="view"><p class="empty" id="load">Učitavam podatke…</p></div></main>
+<nav><div>
+<button data-tab="hrana" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5h14v14H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>Namirnice</button>
+<button data-tab="obroci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h18a9 9 0 0 1-18 0z"/><path d="M9 9c0-2 2-2 2-4M14 9c0-2 2-2 2-4"/></svg>Obroci</button>
+<button data-tab="trening"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg>Trening</button>
+<button data-tab="izvj"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Izvještaj</button>
+</div></nav>
+<div id="tbar"><div><span id="tbn"></span><b id="tbt"></b><button data-act="tstop">Stop</button></div></div>
+<div id="veil" data-act="close"></div><div id="sheet" role="dialog" aria-modal="true"></div>
+<script>
+{
+const APP=true;
+const $=s=>document.querySelector(s),view=$('#view'),sheet=$('#sheet');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(String(v??'').replace(',','.'));return isFinite(n)&&n>=0?n:0};
+const fmt=n=>Math.round(n).toLocaleString('hr-HR'),g1=n=>(Math.round(n*10)/10).toLocaleString('hr-HR');
+const nid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const pad=n=>String(n).padStart(2,'0'),dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const SLOTS=['Doručak','Ručak','Večera','Užina'],DAYS=['ned','pon','uto','sri','čet','pet','sub'];
+const UL={g:'g',kom:'kom',por:'porc.'};
+const st={log:{},rest:{},tab:'hrana',date:dkey(new Date()),foods:[],meals:[],goals:{kcal:2500,p:150,c:280,f:80},ex:{},day:{food:[],workout:[]}};
+
+/* ---------- spremanje ---------- */
+const S={mode:'local',db:null,uid:null,timers:{},chain:{}};
+async function initStore(){if(APP)return;try{if(window.claude&&claude.use){const[db,user]=await Promise.all([claude.use('db'),claude.use('user')]);if(db&&user){const id=await user.id();if(id){S.db=db;S.uid=id;S.mode='db'}}}}catch(e){}}
+const ref=k=>S.db.collection('data/users/'+S.uid).doc(k);
+async function load(k){if(S.mode==='db'){const s=await ref(k).get();return s.exists?JSON.parse(JSON.stringify(s.data())):null}try{const v=localStorage.getItem('fit:'+k);return v?JSON.parse(v):null}catch(e){return null}}
+function save(k,obj){clearTimeout(S.timers[k]);setSync('Spremam…');S.timers[k]=setTimeout(()=>{const data=JSON.parse(JSON.stringify(obj));S.chain[k]=(S.chain[k]||Promise.resolve()).then(()=>put(k,data))},450)}
+async function put(k,data){const go=()=>S.mode==='db'?ref(k).set(data):localStorage.setItem('fit:'+k,JSON.stringify(data));
+ try{await go();setSync('Spremljeno')}catch(e){if(e&&e.code==='unavailable'){await new Promise(r=>setTimeout(r,700+Math.random()*900));try{await go();setSync('Spremljeno');return}catch(e2){}}
+ setSync(e&&e.code==='quota_exceeded'?'Spremište je puno':'Greška pri spremanju')}}
+function setSync(t){$('#sync').textContent=t}
+const saveFoods=()=>save('foods',{items:st.foods}),saveMeals=()=>save('meals',{items:st.meals});
+function saveDay(){save('d-'+st.date,st.day);updEx();save('ex',{items:st.ex});updLog();save('log',{items:st.log})}
+function updLog(){const ws=st.day.workout.map(w=>({ex:exKey(w.ex),sets:w.sets.filter(x=>num(x.r)>0).map(x=>({r:num(x.r),kg:num(x.kg)}))})).filter(w=>w.sets.length);if(ws.length)st.log[st.date]=ws;else delete st.log[st.date]}
+
+/* ---------- izračuni ---------- */
+const fac=(unit,q)=>unit==='g'?q/100:q;
+const foodById=id=>st.foods.find(f=>f.id===id);
+function mealBase(m){const t={kcal:0,p:0,c:0,f:0};for(const pt of m.parts||[]){const f=foodById(pt.fid);if(!f)continue;const k=fac(f.unit,num(pt.qty));t.kcal+=num(f.kcal)*k;t.p+=num(f.p)*k;t.c+=num(f.c)*k;t.f+=num(f.f)*k}return t}
+const val=(e)=>{const k=fac(e.unit,num(e.qty));return{kcal:num(e.base.kcal)*k,p:num(e.base.p)*k,c:num(e.base.c)*k,f:num(e.base.f)*k}};
+function sum(list){const t={kcal:0,p:0,c:0,f:0};for(const e of list){const v=val(e);t.kcal+=v.kcal;t.p+=v.p;t.c+=v.c;t.f+=v.f}return t}
+const macroLine=v=>`<span class="dots"><b class="p">P ${g1(v.p)}</b><b class="c">UH ${g1(v.c)}</b><b class="f">M ${g1(v.f)}</b></span>`;
+function shares(v){const p=num(v.p)*4,c=num(v.c)*4,f=num(v.f)*9,t=p+c+f;return t?{p:p/t*100,c:c/t*100,f:f/t*100}:{p:0,c:0,f:0}}
+const mBar=v=>{const s=shares(v);return`<span class="mb"><i style="width:${s.p}%;background:var(--pro)"></i><i style="width:${s.c}%;background:var(--carb)"></i><i style="width:${s.f}%;background:var(--fat)"></i></span>`};
+function donut(v,size){const s=shares(v),a=s.p,b=s.p+s.c;return`<div class="don" style="width:${size}px;height:${size}px;background:${s.p+s.c+s.f?`conic-gradient(var(--pro) 0 ${a}%,var(--carb) 0 ${b}%,var(--fat) 0 100%)`:'var(--soft)'}"><div><b class="n">${fmt(num(v.kcal))}</b><span>kcal</span></div></div>`}
+function defSlot(){const h=new Date().getHours();return h<11?0:h<16?1:h<21?2:3}
+
+/* ---------- trening povijest ---------- */
+const exKey=name=>{const n=name.trim().toLowerCase();return Object.keys(st.ex).find(k=>k.toLowerCase()===n)||name.trim()};
+function updEx(){for(const k in st.ex){st.ex[k].hist=(st.ex[k].hist||[]).filter(h=>h.d!==st.date)}
+ for(const w of st.day.workout){const sets=w.sets.filter(s=>num(s.r)>0);if(!sets.length)continue;const k=exKey(w.ex);const e=st.ex[k]||(st.ex[k]={hist:[]});
+  e.hist.push({d:st.date,sets:sets.map(s=>({r:num(s.r),kg:num(s.kg)}))});e.hist.sort((a,b)=>a.d<b.d?1:-1);e.hist=e.hist.slice(0,6)}
+ for(const k in st.ex)if(!st.ex[k].hist.length)delete st.ex[k]}
+const lastFor=name=>{const e=st.ex[exKey(name)];return e?e.hist.find(h=>h.d<st.date):null};
+const dlabel=k=>{const t=dkey(new Date()),y=new Date();y.setDate(y.getDate()-1);if(k===t)return'Danas';if(k===dkey(y))return'Jučer';const[a,b,c]=k.split('-').map(Number),d=new Date(a,b-1,c);return DAYS[d.getDay()]+' '+c+'.'+b+'.'};
+const setsTxt=s=>s.map(x=>`${fmt(x.r)}×${g1(x.kg)}`).join(' · ');
+
+/* ---------- prikaz ---------- */
+function render(){$('#dlab').textContent=dlabel(st.date);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===st.tab));
+ $('.dnav').style.display=st.tab==='trening'?'':'none';
+ view.innerHTML=({hrana:vHrana,obroci:vObroci,trening:vTrening,izvj:vIzvj})[st.tab]();if(T.wid)tick();else paintT()}
+
+function vHrana(){let h=`<button class="big" data-act="newFood">+ Nova namirnica</button>`;
+ if(!st.foods.length)return h+`<p class="empty">Još nemaš namirnica. Upiši ih s deklaracije (kcal i makrosi na 100 g ili po komadu).</p>`;
+ return h+`<p class="tpl" style="display:flex;gap:14px;flex-wrap:wrap"><span><b class="p">■</b> proteini</span><span><b class="c">■</b> ugljikohidrati</span><span><b class="f">■</b> masti</span></p><input class="in" id="fq" placeholder="Traži namirnicu…" autocomplete="off" style="margin-bottom:10px"><div class="list" id="fl">${foodRows('')}</div>`}
+function foodRows(q){q=q.trim().toLowerCase();const fs=st.foods.filter(f=>f.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'hr'));
+ if(!fs.length)return`<p class="empty">Nema rezultata.</p>`;
+ return fs.map(f=>`<button class="item" data-act="editFood" data-id="${esc(f.id)}"><span class="nm">${esc(f.name)}<small>${f.unit==='g'?'na 100 g':'po komadu'} · ${macroLine(f)}</small>${mBar(f)}</span><span class="kv n">${fmt(num(f.kcal))}</span></button>`).join('')}
+
+function vObroci(){let h=`<button class="big" data-act="newMeal">+ Novi obrok</button>`;
+ if(!st.meals.length)return h+`<p class="empty">Obrok je recept od tvojih namirnica, npr. „Zobena s bananom“. Spremi ga i odmah vidiš kalorije i makrose za jednu porciju.</p>`;
+ return h+`<p class="tpl" style="display:flex;gap:14px;flex-wrap:wrap"><span><b class="p">■</b> proteini</span><span><b class="c">■</b> ugljikohidrati</span><span><b class="f">■</b> masti</span><span>(udio u kalorijama)</span></p><div class="list">`+st.meals.map(m=>{const b=mealBase(m);return`<button class="item" data-act="editMeal" data-id="${esc(m.id)}">${donut(b,56)}<span class="nm">${esc(m.name)}<small>${(m.parts||[]).length} sastojaka · ${macroLine(b)}</small>${mBar(b)}</span></button>`}).join('')+`</div>`}
+
+function cmp(c,p){if(!p||c.r===''||c.r==null)return['',''];const r=num(c.r),k=num(c.kg),pr=num(p.r),pk=num(p.kg);
+ if(k>pk||(k===pk&&r>pr))return['↑','up'];if(k<pk||(k===pk&&r<pr))return['↓','dn'];return['=','eq']}
+const pvTxt=p=>p?`${fmt(p.r)}×${g1(p.kg)}`:'–';
+function vTrening(){const W=st.day.workout;
+ let h=`<div class="addx"><input class="in" id="exn" list="exl" placeholder="Nova vježba, npr. Čučanj" autocomplete="off"><button class="save" style="flex:none;padding:0 18px" data-act="addEx">Dodaj</button></div>
+ <datalist id="exl">${Object.keys(st.ex).sort().map(k=>`<option value="${esc(k)}">`).join('')}</datalist>`;
+ if(!W.length){const ch=tplChoices();if(!ch.length)return h+`<p class="empty">Za ovaj dan nema treninga. Upiši vježbu iznad, pa dodaj serije.<br>Sljedeći put ćeš ovdje moći odabrati neki od prošlih treninga.</p>`;
+  return h+`<h3 style="margin-top:6px">Koji trening radiš danas?</h3><div class="list">`+ch.map((d,i)=>{const L=st.log[d],ns=L.reduce((a,w)=>a+w.sets.length,0);return`<button class="item" data-act="useTpl" data-id="${d}"><span class="nm"><b>${esc(L.map(w=>w.ex).join(', '))}</b>${i===0&&ch.length>1?'<span class="tag" style="background:var(--acc);color:#fff">na redu</span>':''}<small>Zadnji put ${dlabel(d)} · ${ns} serija</small></span><span class="big-ar" style="color:var(--acc)">›</span></button>`}).join('')+`</div><p class="tpl" style="margin-top:10px">Ili upiši novu vježbu iznad za potpuno novi trening.</p>`}
+ if(st.tpl)h+=`<p class="tpl">Vježbe s treninga od ${dlabel(st.tpl)} – upiši koliko si danas napravio.</p>`;
+ return h+W.map(w=>{const L=lastFor(w.ex);
+  return`<div class="card ex"><div class="exh"><b>${esc(w.ex)}</b><button class="tm" data-act="tmr" data-id="${esc(w.id)}" aria-label="Štoperica odmora"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg><span data-t="${esc(w.id)}">${mmss(restOf(w.ex))}</span></button><button class="x" data-act="delEx" data-id="${esc(w.id)}" aria-label="Obriši vježbu">×</button></div>
+  <div class="last">${L?`Prošli put: ${dlabel(L.d)}`:'Prvi put radiš ovu vježbu.'} · Odmor <button class="link" data-act="rest" data-id="${esc(w.id)}">${mmss(restOf(w.ex))} (promijeni)</button></div>
+  ${w.sets.length?`<div class="sh"><span></span><span style="text-align:center">Prošli put</span><span style="text-align:center">Ponav.</span><span style="text-align:center">kg</span><span></span><span></span></div>`:''}
+  ${w.sets.map((s,i)=>{const p=L?.sets[i],[a,c]=cmp(s,p);return`<div class="set"><span class="no">${i+1}</span><span class="pv">${pvTxt(p)}</span><input inputmode="numeric" data-s="${esc(w.id)}:${i}:r" value="${s.r===''?'':esc(s.r)}" placeholder="${p?esc(p.r):''}" aria-label="Ponavljanja"><input inputmode="decimal" data-s="${esc(w.id)}:${i}:kg" value="${s.kg===''?'':esc(s.kg)}" placeholder="${p?esc(p.kg):''}" aria-label="Kilogrami"><span class="ar ${c}" data-a="${esc(w.id)}:${i}">${a}</span><button class="rm" data-act="delSet" data-id="${esc(w.id)}" data-i="${i}" aria-label="Obriši seriju">×</button></div>`}).join('')}
+  <div class="exf"><button class="ghost" data-act="addSet" data-id="${esc(w.id)}">+ Serija</button></div></div>`}).join('')}
+async function fillTpl(){st.tpl=null}
+function tplChoices(){const seen=new Set(),out=[];for(const d of Object.keys(st.log).filter(x=>x<st.date).sort().reverse()){const L=st.log[d],k=L.map(w=>w.ex.toLowerCase()).sort().join('|');if(seen.has(k))continue;seen.add(k);out.push(d);if(out.length>=4)break}
+ return out.sort()}
+
+/* ---------- štoperica ---------- */
+let msgT=null;const T={wid:null,name:'',end:0,iv:null,done:new Set()};
+const restOf=n=>num(st.rest[exKey(n)])||180,mmss=x=>Math.floor(x/60)+':'+pad(Math.max(0,x%60));
+function startT(w){clearInterval(T.iv);T.wid=w.id;T.name=w.ex;T.end=Date.now()+restOf(w.ex)*1000;T.iv=setInterval(tick,250);tick()}
+function stopT(){clearInterval(T.iv);T.iv=null;T.wid=null;clearTimeout(msgT);msgT=null;paintT()}
+function tick(){const left=Math.ceil((T.end-Date.now())/1000);if(left<=0){const n=T.name;stopT();doneMsg(n);return}paintT(left)}
+function doneMsg(n){const b=$('#tbar');b.style.display='flex';$('#tbn').textContent=n+': odmor gotov, idi na sljedeću seriju!';$('#tbt').textContent='0:00';clearTimeout(msgT);msgT=setTimeout(()=>{if(!T.wid)b.style.display='none'},6000)}
+function paintT(left){document.querySelectorAll('[data-t]').forEach(el=>{const run=T.wid===el.dataset.t,w=st.day.workout.find(x=>x.id===el.dataset.t);el.textContent=run?mmss(left):mmss(w?restOf(w.ex):180);el.parentElement.classList.toggle('run',run)});
+ const b=$('#tbar');if(T.wid){clearTimeout(msgT);b.style.display='flex';$('#tbn').textContent='Odmor · '+T.name;$('#tbt').textContent=mmss(left)}else if(!msgT||b.style.display==='none')b.style.display='none'}
+function sheetRest(w){pick={rest:w.ex};const cur=restOf(w.ex);openSheet(head('Odmor: '+esc(w.ex))+`<div class="seg">${[60,90,120,150,180,240,300].map(x=>`<button data-act="setRest" data-v="${x}" class="${x===cur?'on':''}">${mmss(x)}</button>`).join('')}</div>
+ <label class="l">Ili upiši u minutama (npr. 2,5)</label><input class="in" id="rq" inputmode="decimal" placeholder="${g1(cur/60)}"><div class="row2"><button class="save" data-act="setRest">Spremi</button></div>`)}
+
+/* ---------- izvještaj ---------- */
+const logDates=()=>Object.keys(st.log).sort();
+function prevSets(ex,d){const k=ex.toLowerCase();let best=null;for(const dd in st.log){if(dd>=d||(best&&dd<=best.d))continue;const w=st.log[dd].find(x=>x.ex.toLowerCase()===k);if(w)best={d:dd,sets:w.sets}}return best}
+function sessCmp(d){let up=0,dn=0,eq=0;for(const w of st.log[d]){const P=prevSets(w.ex,d);if(!P)continue;w.sets.forEach((x,i)=>{const[,c]=cmp(x,P.sets[i]);if(c==='up')up++;else if(c==='dn')dn++;else if(c==='eq')eq++})}
+ return{up,dn,eq,c:up>dn?'up':dn>up?'dn':(up+dn+eq?'eq':''),a:up>dn?'↑':dn>up?'↓':(up+dn+eq?'=':'')}}
+const fullDate=d=>{const[a,b,c]=d.split('-').map(Number);return DAYS[new Date(a,b-1,c).getDay()]+' '+c+'.'+b+'.'+a+'.'};
+function vIzvj(){const ds=logDates();if(!ds.length)return`<p class="empty">Još nema spremljenih treninga. Kad upišeš serije u kartici Trening, ovdje će se pojaviti po datumima.</p>`;
+ const all=ds.map((d,i)=>({d,i:i+1,r:sessCmp(d)}));const ups=all.filter(x=>x.r.c==='up').length;
+ return`<div class="stat"><div><b class="n">${all.length}</b><span>treninga</span></div><div><b class="n" style="color:#1f9d55">${ups}</b><span>s napretkom</span></div></div><div class="list">`+
+ all.reverse().map(x=>{const L=st.log[x.d],ns=L.reduce((a,w)=>a+w.sets.length,0);return`<button class="item" data-act="sess" data-id="${x.d}"><span class="nm"><b>Trening ${x.i}</b> · ${fullDate(x.d)}<small>${esc(L.map(w=>w.ex).join(', '))} · ${ns} serija</small></span><span class="big-ar ${x.r.c}">${x.r.a||'·'}</span></button>`}).join('')+`</div>`}
+function sheetSess(d){const L=st.log[d];if(!L)return;const n=logDates().indexOf(d)+1,R=sessCmp(d);
+ let h=head('Trening '+n)+`<p style="margin:0;color:var(--mut)">${fullDate(d)}</p>`+(R.c?`<div class="prev"><span class="n" style="color:#1f9d55">↑ ${R.up}</span><span class="n" style="color:var(--red)">↓ ${R.dn}</span><span class="n" style="color:var(--mut)">= ${R.eq}</span><span style="font-size:13px;color:var(--mut)">serija u odnosu na prošli put</span></div>`:`<div class="prev"><span style="color:var(--mut)">Prvi trening, nema s čim usporediti.</span></div>`);
+ for(const w of L){const P=prevSets(w.ex,d);h+=`<div class="rx">${esc(w.ex)}</div>`+w.sets.map((x,i)=>{const p=P?.sets[i],[a,c]=cmp(x,p);return`<div class="rs"><span class="no" style="color:var(--mut)">${i+1}.</span><span class="n">${fmt(x.r)} × ${g1(x.kg)} kg</span><span class="ar ${c}">${a}</span><span class="pv2">${p?'prošli '+pvTxt(p):''}</span></div>`}).join('')}
+ openSheet(h+`<div class="row2"><button class="ghost" data-act="openDay" data-id="${d}">Otvori u Treningu</button></div>`)}
+
+/* ---------- sigurnosna kopija ---------- */
+async function flush(){for(const k in S.timers)clearTimeout(S.timers[k]);await Promise.all(Object.values(S.chain));}
+async function exportAll(){await new Promise(r=>setTimeout(r,500));await Promise.all(Object.values(S.chain));const data={};
+ if(S.mode==='db'){const q=await S.db.collection('data/users/'+S.uid).get();for(const d of q.docs)if(d.exists)data[d.id]=d.data()}
+ else{try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('fit:'))data[k.slice(4)]=JSON.parse(localStorage.getItem(k))}}catch(e){}}
+ return JSON.stringify({app:'RepLog',v:1,created:new Date().toISOString(),data})}
+const KEYOK=/^[A-Za-z0-9_.~:@+-]{1,120}$/;
+async function importText(txt){let o;try{o=JSON.parse(txt)}catch(e){throw new Error('To nije ispravna sigurnosna kopija.')}
+ const data=o&&o.app==='RepLog'&&o.data;if(!data||typeof data!=='object')throw new Error('To nije RepLog sigurnosna kopija.');
+ const keys=Object.keys(data).filter(k=>KEYOK.test(k)&&data[k]&&typeof data[k]==='object'&&!Array.isArray(data[k]));
+ for(const k of keys)await put(k,data[k]);await loadAll();render();return keys.length}
+let lastExport='';
+function sheetData(){openSheet(head('Podaci')+`<p style="margin:0 0 8px;color:var(--mut);font-size:14px">${S.mode==='db'?'Podaci se spremaju na tvoj Claude račun.':APP?'Podaci se spremaju u ovaj mobitel.':'Podaci se spremaju samo u ovom pregledniku.'} Sigurnosnom kopijom ih možeš prenijeti u drugu verziju aplikacije ili sačuvati za svaki slučaj.</p>
+ <label class="l">1. Izvoz – sigurnosna kopija</label><textarea class="in" id="exp" readonly>Pripremam…</textarea>
+ <div class="row2"><button class="ghost" data-act="copyExp">Kopiraj</button>${APP?'<button class="ghost" data-act="dlExp">Spremi kao datoteku</button>':''}</div>
+ <label class="l" style="margin-top:18px">2. Uvoz – zalijepi kopiju ili odaberi datoteku</label><textarea class="in" id="imp" placeholder="Ovdje zalijepi sigurnosnu kopiju"></textarea>
+ <input type="file" id="impf" accept=".json,application/json,text/plain" style="margin-top:8px;font-size:14px">
+ <p id="impm" style="font-size:14px;margin:8px 2px 0"></p>
+ <div class="row2"><button class="save" data-act="doImp">Uvezi podatke</button></div>
+ <p style="font-size:13px;color:var(--mut);margin:8px 2px 0">Uvoz zamjenjuje namirnice, obroke i treninge koji su u kopiji.</p>`);
+ exportAll().then(t=>{lastExport=t;const e=$('#exp');if(e)e.value=t}).catch(()=>{const e=$('#exp');if(e)e.value='Izvoz nije uspio.'})}
+
+/* ---------- sheet ---------- */
+function openSheet(html){sheet.innerHTML=html;sheet.classList.add('on');$('#veil').classList.add('on')}
+function closeSheet(){sheet.classList.remove('on');$('#veil').classList.remove('on')}
+const head=t=>`<h2>${t}<button class="x" data-act="close" aria-label="Zatvori">×</button></h2>`;
+const slotSeg=sel=>`<label class="l">Obrok u danu</label><div class="seg" id="slots">${SLOTS.map((s,i)=>`<button data-act="slot" data-i="${i}" class="${i===sel?'on':''}">${s}</button>`).join('')}</div>`;
+let pick=null; // {mode:'new'|'edit', entry}
+
+function sheetAdd(){openSheet(head('Dodaj hranu')+`<input class="in" id="aq" placeholder="Traži namirnicu ili obrok…" autocomplete="off"><div class="res" id="ar">${addRows('')}</div>`);setTimeout(()=>$('#aq')?.focus(),250)}
+function addRows(q){q=q.trim().toLowerCase();const ms=st.meals.filter(m=>m.name.toLowerCase().includes(q)),fs=st.foods.filter(f=>f.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'hr'));
+ if(!ms.length&&!fs.length)return`<p class="empty">${st.foods.length?'Nema rezultata.':'Prvo dodaj namirnice u kartici Namirnice.'}</p>`;
+ return ms.map(m=>`<button class="item" data-act="pickM" data-id="${esc(m.id)}"><span class="nm">${esc(m.name)}<span class="tag">obrok</span><small>1 porcija</small></span><span class="kv n">${fmt(mealBase(m).kcal)}</span></button>`).join('')+
+  fs.map(f=>`<button class="item" data-act="pickF" data-id="${esc(f.id)}"><span class="nm">${esc(f.name)}<small>${f.unit==='g'?'na 100 g':'po komadu'}</small></span><span class="kv n">${fmt(num(f.kcal))}</span></button>`).join('')}
+function sheetQty(entry,isNew){pick={entry:{...entry},isNew};const e=pick.entry;
+ openSheet(head(esc(e.name))+`<label class="l">Količina (${e.unit==='g'?'grama':e.unit==='kom'?'komada':'porcija'})</label><input class="in" id="qq" inputmode="decimal" value="${esc(e.qty)}">${slotSeg(e.slot)}<div class="prev" id="pv"></div>
+ <div class="row2">${isNew?'':`<button class="danger" data-act="delE">Obriši</button>`}<button class="save" data-act="saveE">${isNew?'Dodaj u dnevnik':'Spremi'}</button></div>`);prevQty()}
+function prevQty(){const e=pick.entry;e.qty=num($('#qq').value);const v=val(e);$('#pv').innerHTML=`<span class="n">${fmt(v.kcal)} kcal</span>${macroLine(v)}`}
+
+function sheetFood(f){const e=f||{id:'',name:'',unit:'g',kcal:'',p:'',c:'',f:''};pick={food:e};
+ openSheet(head(f?'Uredi namirnicu':'Nova namirnica')+`<label class="l">Naziv</label><input class="in" id="fn" value="${esc(e.name)}" placeholder="npr. Pileća prsa">
+ <label class="l">Vrijednosti su</label><div class="seg" id="fu"><button data-act="unit" data-u="g" class="${e.unit==='g'?'on':''}">na 100 g</button><button data-act="unit" data-u="kom" class="${e.unit==='kom'?'on':''}">po 1 komadu</button></div>
+ <div class="grid4" style="margin-top:4px">${[['kcal','kcal'],['p','Proteini g'],['c','Ugljikohidr. g'],['f','Masti g']].map(([k,l])=>`<div><label class="l">${l}</label><input class="in" id="f_${k}" inputmode="decimal" value="${esc(e[k])}"></div>`).join('')}</div>
+ <p style="font-size:13px;color:var(--mut);margin:8px 2px 0">Ako ostaviš kcal prazno, izračunat ću ih iz makrosa (4·P + 4·UH + 9·M).</p>
+ <div class="row2">${f?`<button class="danger" data-act="delFood">Obriši</button>`:''}<button class="save" data-act="saveFood">Spremi</button></div>`)}
+
+function sheetMeal(m){pick={meal:m?JSON.parse(JSON.stringify(m)):{id:'',name:'',parts:[]},isNew:!m};
+ openSheet(head(m?'Uredi obrok':'Novi obrok')+`<label class="l">Naziv obroka</label><input class="in" id="mn" value="${esc(pick.meal.name)}" placeholder="npr. Zobena s bananom">
+ <label class="l">Sastojci (za 1 porciju)</label><div id="mp"></div><div class="tot" id="mt"></div>
+ <input class="in" id="mq" placeholder="Dodaj sastojak – traži namirnicu…" autocomplete="off"><div class="res" id="mr" style="display:none"></div>
+ <div class="row2">${m?`<button class="danger" data-act="delMeal">Obriši</button>`:''}<button class="save" data-act="saveMeal">Spremi obrok</button></div>`);drawParts()}
+function partVal(pt){const f=foodById(pt.fid);if(!f)return null;const k=fac(f.unit,num(pt.qty));return{kcal:num(f.kcal)*k,p:num(f.p)*k,c:num(f.c)*k,f:num(f.f)*k}}
+const partLine=v=>v?`<b class="n">${fmt(v.kcal)} kcal</b> ${macroLine(v)}`:'';
+function drawParts(){const ps=pick.meal.parts;$('#mp').innerHTML=ps.length?`<div class="list">`+ps.map((pt,i)=>{const f=foodById(pt.fid);if(!f)return'';
+ return`<div class="item mpi" style="cursor:default"><div class="mpt"><span class="nm">${esc(f.name)}</span><input class="in" style="width:84px;text-align:right" inputmode="decimal" data-mp="${i}" value="${esc(pt.qty)}" aria-label="Količina"><span style="width:30px;color:var(--mut)">${UL[f.unit]}</span><button class="x" style="width:40px;height:40px" data-act="delPart" data-i="${i}" aria-label="Ukloni">×</button></div><div class="mpv" data-pv="${i}">${partLine(partVal(pt))}</div><div style="display:flex;align-items:center;gap:10px"><span style="flex:1" data-pb="${i}">${mBar(partVal(pt))}</span><span class="share" data-sh="${i}"></span></div></div>`}).join('')+`</div>`:`<p class="empty" style="padding:10px">Još nema sastojaka.</p>`;mealTot()}
+function mealTot(){const b=mealBase(pick.meal),sh=shares(b);$('#mt').innerHTML=donut(b,104)+`<div class="leg"><div style="font-weight:600;grid-template-columns:1fr">Ukupno za porciju</div>${[['Proteini','p','var(--pro)'],['Ugljikohidrati','c','var(--carb)'],['Masti','f','var(--fat)']].map(([l,k,c])=>`<div><i style="background:${c}"></i><span>${l}</span><b>${g1(b[k])} g</b><em>${Math.round(sh[k])}%</em></div>`).join('')}</div>`;
+ const tk=b.kcal;pick.meal.parts.forEach((pt,i)=>{const el=sheet.querySelector(`[data-sh="${i}"]`),v=partVal(pt);if(el&&v)el.textContent=tk?Math.round(v.kcal/tk*100)+'% obroka':''})}
+
+function sheetGoals(){const G=st.goals;openSheet(head('Dnevni ciljevi')+`<div class="grid4">${[['kcal','kcal'],['p','Proteini g'],['c','Ugljikohidr. g'],['f','Masti g']].map(([k,l])=>`<div><label class="l">${l}</label><input class="in" id="g_${k}" inputmode="decimal" value="${esc(G[k])}"></div>`).join('')}</div>
+ <p style="font-size:13px;color:var(--mut);margin:8px 2px 0" id="gh"></p><div class="row2"><button class="save" data-act="saveGoals">Spremi</button></div>`);gHint()}
+function gHint(){const k=4*num($('#g_p').value)+4*num($('#g_c').value)+9*num($('#g_f').value);$('#gh').textContent=`Makrosi zajedno daju ${fmt(k)} kcal.`}
+
+/* ---------- akcije ---------- */
+function arm(b,fn){if(b.dataset.arm){fn();return}b.dataset.arm=1;const t=b.textContent;b.textContent='Sigurno?';b.classList.add('arm');setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent=t;b.classList.remove('arm')}},3000)}
+async function goDate(k){st.date=k;T.done.clear();$('#dlab').textContent=dlabel(k);view.innerHTML=`<p class="empty">Učitavam…</p>`;try{const d=await load('d-'+k);if(st.date!==k)return;st.day={food:d?.food||[],workout:d?.workout||[]}}catch(e){st.day={food:[],workout:[]};setSync('Greška pri učitavanju')}await fillTpl();if(st.date===k)render()}
+const shift=n=>{const[a,b,c]=st.date.split('-').map(Number);goDate(dkey(new Date(a,b-1,c+n)))};
+
+document.addEventListener('click',ev=>{const b=ev.target.closest('[data-act],[data-tab]');if(!b)return;
+ if(b.dataset.tab){st.tab=b.dataset.tab;render();scrollTo(0,0);return}
+ const a=b.dataset.act,id=b.dataset.id;
+ if(a==='close')return closeSheet();
+ if(a==='prev')return shift(-1);if(a==='next')return shift(1);if(a==='today')return goDate(dkey(new Date()));
+ if(a==='add')return sheetAdd();
+ if(a==='tstop')return stopT();
+ if(a==='useTpl'){const L=st.log[id];if(!L||st.day.workout.length)return;st.day.workout=L.map(w=>({id:nid(),ex:w.ex,sets:w.sets.map(()=>({r:'',kg:''}))}));st.tpl=id;return render()}
+ if(a==='data')return sheetData();
+ if(a==='copyExp'){const e=$('#exp');if(!lastExport)return;e.focus();e.select();try{navigator.clipboard.writeText(lastExport).then(()=>{b.textContent='Kopirano ✓'},()=>{b.textContent='Označeno – kopiraj ručno'})}catch(x){b.textContent='Označeno – kopiraj ručno'}return}
+ if(a==='dlExp'){if(!lastExport)return;const u=URL.createObjectURL(new Blob([lastExport],{type:'application/json'})),l=document.createElement('a');l.href=u;l.download='replog-kopija-'+dkey(new Date())+'.json';document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return}
+ if(a==='doImp'){const t=$('#imp').value.trim(),m=$('#impm');if(!t){m.textContent='Prvo zalijepi kopiju ili odaberi datoteku.';return}
+  arm(b,async()=>{b.disabled=true;m.textContent='Uvozim…';try{const n=await importText(t);m.textContent='Gotovo, uvezeno '+n+' zapisa.';b.textContent='Uvezeno ✓'}catch(e){m.textContent=e.message||'Uvoz nije uspio.';b.disabled=false;b.textContent='Uvezi podatke';b.classList.remove('arm');delete b.dataset.arm}});return}
+ if(a==='sess')return sheetSess(id);
+ if(a==='openDay'){closeSheet();st.tab='trening';return goDate(id)}
+ if(a==='setRest'){let v=b.dataset.v?+b.dataset.v:Math.round(num($('#rq').value)*60);if(v>0){st.rest[exKey(pick.rest)]=v;save('rest',{items:st.rest})}closeSheet();return render()}
+ if(a==='goals')return sheetGoals();
+ if(a==='saveGoals'){for(const k of['kcal','p','c','f'])st.goals[k]=num($('#g_'+k).value);save('goals',st.goals);closeSheet();return render()}
+ if(a==='pickF'){const f=foodById(id);return sheetQty({id:nid(),type:'food',name:f.name,unit:f.unit,qty:f.unit==='g'?100:1,slot:defSlot(),base:{kcal:num(f.kcal),p:num(f.p),c:num(f.c),f:num(f.f)}},true)}
+ if(a==='pickM'){const m=st.meals.find(x=>x.id===id);return sheetQty({id:nid(),type:'meal',name:m.name,unit:'por',qty:1,slot:defSlot(),base:mealBase(m)},true)}
+ if(a==='editE'){const e=st.day.food.find(x=>x.id===id);if(e)sheetQty(e,false);return}
+ if(a==='slot'){pick.entry.slot=+b.dataset.i;sheet.querySelectorAll('#slots button').forEach(x=>x.classList.toggle('on',x===b));return}
+ if(a==='saveE'){prevQty();const e=pick.entry;if(!(e.qty>0))return $('#qq').focus();if(pick.isNew)st.day.food.push(e);else{const i=st.day.food.findIndex(x=>x.id===e.id);if(i>=0)st.day.food[i]=e}saveDay();closeSheet();return render()}
+ if(a==='delE')return arm(b,()=>{st.day.food=st.day.food.filter(x=>x.id!==pick.entry.id);saveDay();closeSheet();render()});
+ if(a==='newFood')return sheetFood(null);
+ if(a==='editFood')return sheetFood(foodById(id));
+ if(a==='unit'){pick.food.unit=b.dataset.u;sheet.querySelectorAll('#fu button').forEach(x=>x.classList.toggle('on',x===b));return}
+ if(a==='saveFood'){const name=$('#fn').value.trim();if(!name)return $('#fn').focus();const v={};for(const k of['kcal','p','c','f'])v[k]=num($('#f_'+k).value);
+  if(!$('#f_kcal').value.trim())v.kcal=Math.round(4*v.p+4*v.c+9*v.f);
+  const f={...pick.food,name,...v};if(!f.id){f.id=nid();st.foods.push(f)}else{const i=st.foods.findIndex(x=>x.id===f.id);st.foods[i]=f}saveFoods();closeSheet();return render()}
+ if(a==='delFood')return arm(b,()=>{st.foods=st.foods.filter(x=>x.id!==pick.food.id);saveFoods();closeSheet();render()});
+ if(a==='newMeal')return sheetMeal(null);
+ if(a==='editMeal')return sheetMeal(st.meals.find(x=>x.id===id));
+ if(a==='addPart'){const f=foodById(id);pick.meal.parts.push({fid:f.id,qty:f.unit==='g'?100:1});$('#mq').value='';$('#mr').style.display='none';return drawParts()}
+ if(a==='delPart'){pick.meal.parts.splice(+b.dataset.i,1);return drawParts()}
+ if(a==='saveMeal'){const m=pick.meal;m.name=$('#mn').value.trim();if(!m.name)return $('#mn').focus();m.parts=m.parts.filter(p=>foodById(p.fid)&&num(p.qty)>0);
+  if(!m.id){m.id=nid();st.meals.push(m)}else{const i=st.meals.findIndex(x=>x.id===m.id);st.meals[i]=m}saveMeals();closeSheet();return render()}
+ if(a==='delMeal')return arm(b,()=>{st.meals=st.meals.filter(x=>x.id!==pick.meal.id);saveMeals();closeSheet();render()});
+ if(a==='addEx'){const n=$('#exn').value.trim();if(!n)return $('#exn').focus();const L0=lastFor(n),w={id:nid(),ex:exKey(n),sets:L0?L0.sets.map(()=>({r:'',kg:''})):[{r:'',kg:''}]};$('#exn').value='';st.day.workout.push(w);saveDay();render();
+  const ins=view.querySelectorAll(`[data-s^="${w.id}:"]`);ins[0]?.focus();return}
+ const W=st.day.workout.find(x=>x.id===id);
+ if(a==='addSet'&&W){const l=W.sets[W.sets.length-1];W.sets.push(l?{...l}:{r:'',kg:''});saveDay();render();view.querySelector(`[data-s="${W.id}:${W.sets.length-1}:r"]`)?.focus();return}
+ if(a==='delSet'&&W){W.sets.splice(+b.dataset.i,1);saveDay();return render()}
+ if(a==='tmr'&&W){if(T.wid===W.id)stopT();else startT(W);return}
+ if(a==='rest'&&W)return sheetRest(W);
+ if(a==='delEx')return arm(b,()=>{st.day.workout=st.day.workout.filter(x=>x.id!==id);saveDay();render()});
+});
+
+document.addEventListener('input',ev=>{const t=ev.target;
+ if(t.id==='aq')$('#ar').innerHTML=addRows(t.value);
+ else if(t.id==='fq')$('#fl').innerHTML=foodRows(t.value);
+ else if(t.id==='qq')prevQty();
+ else if(t.id&&t.id.startsWith('g_'))gHint();
+ else if(t.dataset.mp!==undefined){const i=+t.dataset.mp;pick.meal.parts[i].qty=num(t.value);const el=sheet.querySelector(`[data-pv="${i}"]`);if(el)el.innerHTML=partLine(partVal(pick.meal.parts[i]));const pb=sheet.querySelector(`[data-pb="${i}"]`);if(pb)pb.innerHTML=mBar(partVal(pick.meal.parts[i]));mealTot()}
+ else if(t.id==='mq'){const q=t.value.trim().toLowerCase(),r=$('#mr');if(!q){r.style.display='none';return}
+  const fs=st.foods.filter(f=>f.name.toLowerCase().includes(q)).slice(0,30);r.style.display='';r.innerHTML=fs.length?fs.map(f=>`<button class="item" data-act="addPart" data-id="${esc(f.id)}"><span class="nm">${esc(f.name)}<small>${f.unit==='g'?'na 100 g':'po komadu'}</small></span><span class="kv n">${fmt(num(f.kcal))}</span></button>`).join(''):`<p class="empty">Nema namirnice „${esc(t.value)}“. Dodaj je u kartici Namirnice.</p>`}
+ else if(t.dataset.s){const[wid,i,k]=t.dataset.s.split(':'),W=st.day.workout.find(x=>x.id===wid);if(!W||!W.sets[i])return;W.sets[i][k]=t.value.replace(',','.');saveDay();
+  const[a,c]=cmp(W.sets[i],lastFor(W.ex)?.sets[i]);const el=view.querySelector(`[data-a="${wid}:${i}"]`);if(el){el.textContent=a;el.className='ar '+c}}
+});
+document.addEventListener('change',ev=>{const t=ev.target;
+ if(t.id==='impf'&&t.files&&t.files[0]){const r=new FileReader();r.onload=()=>{$('#imp').value=String(r.result||'');$('#impm').textContent='Datoteka učitana, sad dodirni Uvezi podatke.'};r.readAsText(t.files[0]);return}
+ if(!t.dataset.s)return;const[wid,i,k]=t.dataset.s.split(':'),W=st.day.workout.find(x=>x.id===wid),x=W&&W.sets[i];if(!x)return;
+ if(num(x.r)>0&&(k==='kg'||x.kg!=='')){const key=wid+':'+i;if(!T.done.has(key)){T.done.add(key);startT(W)}}});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape')closeSheet();if(ev.key==='Enter'&&ev.target.id==='exn')$('[data-act="addEx"]').click()});
+
+async function loadAll(){try{const[f,m,g,e,d,rs,lg]=await Promise.all(['foods','meals','goals','ex','d-'+st.date,'rest','log'].map(load));st.rest=rs?.items||{};
+  st.foods=f?.items||[];st.meals=m?.items||[];if(g)st.goals={...st.goals,...g};st.ex=e?.items||{};st.day={food:d?.food||[],workout:d?.workout||[]};
+  st.log=lg?.items||{};if(!lg){for(const k in st.ex)for(const hh of st.ex[k].hist||[])(st.log[hh.d]=st.log[hh.d]||[]).push({ex:k,sets:hh.sets});if(Object.keys(st.log).length)save('log',{items:st.log})}}
+ catch(err){setSync('Greška pri učitavanju')}
+ await fillTpl()}
+async function boot(){const tm=setTimeout(()=>{const l=$('#load');if(l)l.textContent='Podaci se još ne mogu dohvatiti. Provjeri internetsku vezu.'},10000);
+ await initStore();await loadAll();clearTimeout(tm);
+ if(APP){try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}try{'serviceWorker' in navigator&&navigator.serviceWorker.register('sw.js')}catch(e){}}
+ else if(S.mode!=='db'){const n=$('#note');n.style.display='block';n.textContent='Podaci se trenutno spremaju samo u ovom pregledniku. Otvori aplikaciju prijavljen u Claude da bi se spremali na tvoj račun.'}
+ render()}
+boot();
+}
+</script></body></html>
